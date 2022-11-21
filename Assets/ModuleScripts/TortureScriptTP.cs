@@ -30,16 +30,18 @@ public class TortureScriptTP : TPScript<TortureScript>
                     Module._grid[i].OnInteract();
                     yield return new WaitForSeconds(.1f);
                 }
-        else
+        else if (Regex.IsMatch(command, @"[A-D][1-4]\s?"))
         {
             string[] presses = command.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-            for(int i = 0; i < presses.Length; i++)
+            for (int i = 0; i < presses.Length; i++)
             {
                 yield return null;
                 Module._grid[presses[i][0] - 'A' + (presses[i][1] - '1') * 4].OnInteract();
                 yield return new WaitForSeconds(.1f);
             }
         }
+        else
+            yield return "sendtochaterror The module did not detect any valid command formats. Check your command.";
     }
 }

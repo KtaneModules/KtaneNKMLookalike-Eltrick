@@ -112,6 +112,9 @@ public class TortureScript : ModuleScript
 
     private void PressLogKey()
     {
+        if (_isModuleSolved)
+            return;
+
         _isLogging = true;
         _moduleRender.color = new Color32(192, 0, 0, 255);
         Enumerable.Range(0, _grid.Length).Where(x => ((x ^ (x >> 2)) & 1) == 1).ForEach(x => _grid[x].GetComponent<Selectable>().SetTileColour(x, 3));

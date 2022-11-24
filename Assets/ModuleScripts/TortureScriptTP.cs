@@ -8,7 +8,6 @@ public class TortureScriptTP : TPScript<TortureScript>
 {
     public override IEnumerator ForceSolve()
     {
-        Module._isNotEnoughTime = true;
         yield return null;
         for (int i = 0; i < Module._grid.Length; i++)
             while (Module._twitchPlaysAutosolver[i] != 0)
@@ -16,6 +15,8 @@ public class TortureScriptTP : TPScript<TortureScript>
                 Module._grid[i].OnInteract();
                 yield return new WaitForSeconds(.1f);
             }
+        while (Module._isModuleSolved)
+            yield return true;
     }
 
     public override IEnumerator Process(string command)

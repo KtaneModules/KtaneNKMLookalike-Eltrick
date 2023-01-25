@@ -8,6 +8,11 @@ public class TortureScriptTP : TPScript<TortureScript>
 {
     public override IEnumerator ForceSolve()
     {
+        Module._isLogging = true;
+        Module._isAutosolve = true;
+
+        Module.PressLogKey();
+
         yield return null;
         for (int i = 0; i < Module._grid.Length; i++)
             while (Module._twitchPlaysAutosolver[i] != 0)

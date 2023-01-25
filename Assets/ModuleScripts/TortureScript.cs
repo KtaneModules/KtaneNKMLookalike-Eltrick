@@ -1,8 +1,8 @@
 ﻿using KeepCoding;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using UnityEngine;
 using Rnd = UnityEngine.Random;
@@ -23,8 +23,43 @@ public class TortureScript : ModuleScript
     private Material _moduleRender;
     internal KMSelectable[] _grid = new KMSelectable[16];
 
+    class TortureSettings
+    {
+        public int modulus = 10;
+        public int minAffected = 5;
+        public int maxAffected = 7;
+    }
+    TortureSettings settings = new TortureSettings();
+    private static Dictionary<string, object>[] _TweaksEditorSettings = new Dictionary<string, object>[]
+    {
+        new Dictionary<string, object>
+        {
+            { "Filename", "TortureSettings.json" },
+            { "Name", "Torture" },
+            { "Listings", new List<Dictionary<string, object>>
+                {
+                    new Dictionary<string, object>
+                    {
+                        { "Key", "Modulus" },
+                        { "Text", "The modulus the module uses. Cannot be 1 or less." }
+                    },
+                    new Dictionary<string, object>
+                    {
+                        { "Key", "MinAffected" },
+                        { "Text", "Minimum number of affected buttons. Clamps at a minimum of 3." }
+                    },
+                    new Dictionary<string, object>
+                    {
+                        { "Key", "MaxAffected" },
+                        { "Text", "Maximum number of affected buttons. Clamps at a minimum of 4." }
+                    }
+                }
+            }
+        }
+    };
+
     private string[] _solveMessages = { "CONGRATULATIONS!", "おめでとう！ありがとうございます", "MOD  ULESOL  VED!" };
-    internal bool _isModuleSolved, _isSeedSet, _isNotEnoughTime, _isLogging, _isRalpMode = false;
+    internal bool _isModuleSolved, _isSeedSet, _isNotEnoughTime, _isLogging, _isAutosolve, _isRalpMode = false;
     private int _seed, _modulus;
     internal int[] _twitchPlaysAutosolver;
     private double[] _solveTimings = { 0.485, 0.86, 1.235, 1.61, 1.985, 2.36, 2.735, 3.485, 3.86, 4.235, 4.61, 4.985, 5.735, 5.985, 6.235, 6.485, 6.86, 7.235, 7.485, 7.735, 7.985, 8.36, 8.735, 9.11, 9.485, 9.86, 10.235, 10.61, 10.985, 11.36, 11.735, 12.11, 12.485, 13.61, 13.985, 14.36, 14.735, 15.11, 15.485, 15.985, 16.235, 16.485, 16.735, 16.985, 17.36, 17.735, 18.485, 18.86, 18.985, 19.11, 19.235, 19.36, 19.485, 19.61, 19.735, 19.86, 19.985, 20.11, 20.235, 20.36, 20.485, 20.61, 20.735, 20.828, 20.922, 21.016, 21.11, 21.203, 21.297, 21.391, 21.485, 21.61, 21.735, 21.86, 21.985, 22.11, 22.235, 22.36, 22.485, 22.61, 22.735, 22.86, 22.985, 23.078, 23.172, 23.266, 23.36, 23.453, 23.547, 23.641, 23.735, 23.828, 23.922, 24.016, 24.11, 24.203, 24.297, 24.391, 24.285 };
@@ -48,7 +83,11 @@ public class TortureScript : ModuleScript
 
         _loggingKey.Assign(onInteract: () => { PressLogKey(); });
 
-        _modulus = 10;
+        ModConfig<TortureSettings> Config = new ModConfig<TortureSettings>("TortureSettings");
+        settings = Config.Read();
+        Config.Write(settings);
+
+        _modulus = settings.modulus <= 1 ? 10 : settings.modulus;
         GenerateGrid(_rnd.Next(0, _modulus));
     }
 
@@ -58,7 +97,7 @@ public class TortureScript : ModuleScript
         {
             int x = i;
             _grid[i] = Instantiate(_referencePoint, _module.transform);
-            _grid[i].GetComponent<Selectable>().SetValues(i, _isRalpMode ? _rnd.Next(7, 17) : _rnd.Next(5, 8), _grid.Length, initialFinalValue, _modulus);
+            _grid[i].GetComponent<Selectable>().SetValues(i, _isRalpMode ? _rnd.Next(7, 17) : _rnd.Next(Math.Max(settings.minAffected, 3), Math.Max(settings.maxAffected + 1, 5)), _grid.Length, initialFinalValue, _modulus);
             _grid[i].GetComponent<Selectable>().SetText(initialFinalValue.ToString());
             _grid[i].GetComponent<Selectable>().SetColour(i, false, _isLogging);
 
@@ -110,7 +149,7 @@ public class TortureScript : ModuleScript
         Log("The solution grid is: " + log);
     }
 
-    private void PressLogKey()
+    internal void PressLogKey()
     {
         if (_isModuleSolved)
             return;
@@ -137,7 +176,20 @@ public class TortureScript : ModuleScript
             _grid[i].GetComponent<Selectable>().SetText("");
         if (_info.GetTime() < 60 || _info.GetStrikes() + 1 == Game.Mission.GeneratorSetting.NumStrikes)
             _isNotEnoughTime = true;
-        StartCoroutine(SolveAnimation());
+
+        if(!_isAutosolve)
+            StartCoroutine(SolveAnimation());
+        else
+        {
+            _module.HandlePass();
+            string text = "AUTOSOLVECHEATER";
+
+            for (int i = 0; i < _grid.Length; i++)
+            {
+                _grid[i].GetComponent<Selectable>().SetText(text[i].ToString());
+                _grid[i].GetComponent<Selectable>().SetColour(i, false, _isLogging);
+            }
+        }
     }
 
     private IEnumerator SolveAnimation()

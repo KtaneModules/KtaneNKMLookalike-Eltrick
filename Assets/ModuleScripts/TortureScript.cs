@@ -21,7 +21,9 @@ public class TortureScript : ModuleScript
     internal AudioClip[] _sounds;
     [SerializeField]
     private Material _moduleRender;
-    internal KMSelectable[] _grid = new KMSelectable[16];
+
+    private int _gridSize = 4;
+    internal KMSelectable[] _grid;
 
     class TortureSettings
     {
@@ -67,6 +69,8 @@ public class TortureScript : ModuleScript
     // Use this for initialization
     private void Start()
     {
+        _grid = new KMSelectable[(int)Math.Pow(_gridSize, 2)];
+
         _moduleRender.color = new Color32(255, 255, 255, 255);
         if (!_isSeedSet)
         {
@@ -93,6 +97,8 @@ public class TortureScript : ModuleScript
 
     private void GenerateGrid(int initialFinalValue)
     {
+        _module.GetComponent<KMSelectable>().Children = new KMSelectable[_grid.Length + 1];
+
         for (int i = 0; i < _grid.Length; i++)
         {
             int x = i;
@@ -101,12 +107,14 @@ public class TortureScript : ModuleScript
             _grid[i].GetComponent<Selectable>().SetText(initialFinalValue.ToString());
             _grid[i].GetComponent<Selectable>().SetColour(i, false, _isLogging);
 
-            _grid[i].transform.localPosition += new Vector3(0.0315f * (i % 4), 0, -0.0315f * (i / 4));
+            _grid[i].transform.localPosition += new Vector3(0.0315f * (i % _gridSize), 0, -0.0315f * (i / _gridSize));
             _grid[i].Parent = _module.GetComponent<KMSelectable>();
 
             _grid[i].GetComponent<MeshRenderer>().material = _colours[(i ^ (i >> 2)) & 1];
             _module.GetComponent<KMSelectable>().Children[x] = _grid[x];
         }
+        _module.GetComponent<KMSelectable>().Children[_grid.Length] = _loggingKey;
+
         _referencePoint.gameObject.SetActive(false);
         _module.GetComponent<KMSelectable>().UpdateChildrenProperly();
         Randomise();
@@ -132,20 +140,20 @@ public class TortureScript : ModuleScript
         if (!forced)
         {
             string grid = _grid.Select(x => x.GetComponent<Selectable>().GetValue()).Join("");
-            for (int i = 0; i < 3; i++)
-                grid = grid.Insert(4 * (i + 1) + i, "|");
+            for (int i = 0; i < _gridSize - 1; i++)
+                grid = grid.Insert(_gridSize * (i + 1) + i, "|");
             Log("The initial state is: " + grid);
             for (int i = 0; i < _grid.Length; i++)
             {
                 string j = _grid[i].GetComponent<Selectable>().GetOffsets().Join("");
-                for (int k = 0; k < 3; k++)
-                    j = j.Insert(4 * (k + 1) + k, "|");
-                Log("The matrix for tile " + "ABCD"[i % 4].ToString() + "1234"[i / 4].ToString() + " is: " + j);
+                for (int k = 0; k < _gridSize - 1; k++)
+                    j = j.Insert(_gridSize * (k + 1) + k, "|");
+                Log("The matrix for tile " + "ABCD"[i % _gridSize].ToString() + "1234"[i / _gridSize].ToString() + " is: " + j);
             }
         }
         string log = _twitchPlaysAutosolver.Join("");
-        for (int i = 0; i < 3; i++)
-            log = log.Insert(4 * (i + 1) + i, "|");
+        for (int i = 0; i < _gridSize - 1; i++)
+            log = log.Insert(_gridSize * (i + 1) + i, "|");
         Log("The solution grid is: " + log);
     }
 

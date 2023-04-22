@@ -60,7 +60,7 @@ public class Selectable : MonoBehaviour
     public void SetColour(int index, bool changed, bool logging)
     {
         if (!changed)
-            Parent._grid[index].GetComponentInChildren<TextMesh>().color = ((index ^ (index >> 2)) & 1) == 1 ? new Color32(0, 0, 0, 255) : (logging ? new Color32(192, 0, 0, 255) : new Color32(0, 192, 255, 255));
+            Parent._grid[index].GetComponentInChildren<TextMesh>().color = (((index % Parent._width) ^ (index / Parent._width)) & 1) == 1 ? new Color32(0, 0, 0, 255) : (logging ? new Color32(192, 0, 0, 255) : new Color32(0, 192, 255, 255));
         else
             Parent._grid[index].GetComponentInChildren<TextMesh>().color = new Color32(255, 255, 255, 255);
     }
@@ -70,7 +70,7 @@ public class Selectable : MonoBehaviour
         ButtonText.color = new Color(0, 0, 0);
         Parent._grid[index].GetComponent<MeshRenderer>().material = Parent._colours[colour];
         if (colour == 3)
-            Enumerable.Range(0, Parent._grid.Length).Where(x => ((x ^ (x >> 2)) & 1) == 0).ForEach(x => Parent._grid[x].GetComponentInChildren<TextMesh>().color = new Color32(192, 0, 0, 255));
+            Enumerable.Range(0, Parent._grid.Length).Where(x => (((x % Parent._width) ^ (x / Parent._width)) & 1) == 0).ForEach(x => Parent._grid[x].GetComponentInChildren<TextMesh>().color = new Color32(192, 0, 0, 255));
     }
 
     public void SetText(string x)

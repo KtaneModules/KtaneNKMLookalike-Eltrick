@@ -22,17 +22,20 @@ public class TortureScript : ModuleScript
     [SerializeField]
     private Material _moduleRender;
 
-    private int _gridSize = 4;
+    internal int _height = 4, _width = 4;
+    internal int _gridSize = 4;
     internal KMSelectable[] _grid;
 
     class TortureSettings
     {
-        public int modulus = 10;
-        public int minAffected = 5;
-        public int maxAffected = 7;
+        public int Modulus = 10;
+        public int MinAffected = 5;
+        public int MaxAffected = 7;
+        public int Height = 4;
+        public int Width = 4;
     }
-    TortureSettings settings = new TortureSettings();
-    private static Dictionary<string, object>[] _TweaksEditorSettings = new Dictionary<string, object>[]
+    private TortureSettings _settings = new TortureSettings();
+    private static Dictionary<string, object>[] _tweaksEditorSettings = new Dictionary<string, object>[]
     {
         new Dictionary<string, object>
         {
@@ -54,6 +57,16 @@ public class TortureScript : ModuleScript
                     {
                         { "Key", "MaxAffected" },
                         { "Text", "Maximum number of affected buttons. Clamps at a minimum of 4." }
+                    },
+                    new Dictionary<string, object>
+                    {
+                        { "Key", "Height" },
+                        { "Text", "Height of Grid. Full size of the grid must at least be 5 tiles." }
+                    },
+                    new Dictionary<string, object>
+                    {
+                        { "Key", "Width" },
+                        { "Text", "Width of Grid. Full size of the grid must at least be 5 tiles." }
                     }
                 }
             }
@@ -61,7 +74,7 @@ public class TortureScript : ModuleScript
     };
 
     private string[] _solveMessages = { "CONGRATULATIONS!", "おめでとう！ありがとうございます", "MOD  ULESOL  VED!" };
-    internal bool _isModuleSolved, _isSeedSet, _isNotEnoughTime, _isLogging, _isAutosolve, _isRalpMode = false;
+    internal bool _isModuleSolved, _isSeedSet, _isNotEnoughTime, _isLogging, _isAutosolve, _isRalpMode = false, _isAprilFools;
     private int _seed, _modulus;
     internal int[] _twitchPlaysAutosolver;
     private double[] _solveTimings = { 0.485, 0.86, 1.235, 1.61, 1.985, 2.36, 2.735, 3.485, 3.86, 4.235, 4.61, 4.985, 5.735, 5.985, 6.235, 6.485, 6.86, 7.235, 7.485, 7.735, 7.985, 8.36, 8.735, 9.11, 9.485, 9.86, 10.235, 10.61, 10.985, 11.36, 11.735, 12.11, 12.485, 13.61, 13.985, 14.36, 14.735, 15.11, 15.485, 15.985, 16.235, 16.485, 16.735, 16.985, 17.36, 17.735, 18.485, 18.86, 18.985, 19.11, 19.235, 19.36, 19.485, 19.61, 19.735, 19.86, 19.985, 20.11, 20.235, 20.36, 20.485, 20.61, 20.735, 20.828, 20.922, 21.016, 21.11, 21.203, 21.297, 21.391, 21.485, 21.61, 21.735, 21.86, 21.985, 22.11, 22.235, 22.36, 22.485, 22.61, 22.735, 22.86, 22.985, 23.078, 23.172, 23.266, 23.36, 23.453, 23.547, 23.641, 23.735, 23.828, 23.922, 24.016, 24.11, 24.203, 24.297, 24.391, 24.285 };
@@ -69,7 +82,7 @@ public class TortureScript : ModuleScript
     // Use this for initialization
     private void Start()
     {
-        _grid = new KMSelectable[(int)Math.Pow(_gridSize, 2)];
+        _isAprilFools = DateTime.Now.Day == 1 && DateTime.Now.Month == 4;
 
         _moduleRender.color = new Color32(255, 255, 255, 255);
         if (!_isSeedSet)
@@ -88,29 +101,57 @@ public class TortureScript : ModuleScript
         _loggingKey.Assign(onInteract: () => { PressLogKey(); });
 
         ModConfig<TortureSettings> Config = new ModConfig<TortureSettings>("TortureSettings");
-        settings = Config.Read();
-        Config.Write(settings);
+        _settings = Config.Read();
 
-        _modulus = settings.modulus <= 1 ? 10 : settings.modulus;
+        // _width = _isAprilFools ? _rnd.Next(1, 256) : _settings.Width;
+        // _height = _isAprilFools ? _rnd.Next(1, 256) : _settings.Height;
+
+        _width = 26;
+        _height = 26;
+
+        if(_width * _height < 5 && !_isAprilFools)
+        {
+            if (_width == _height)
+                _width = (int)Mathf.Ceil(5f / _height);
+            else if (_width < _height)
+                _height = 5;
+            else
+                _width = 5;
+            _settings.Height = _height;
+            _settings.Width = _width;
+        }
+
+        _gridSize = _width * _height;
+
+        _grid = new KMSelectable[_gridSize];
+
+        _settings.MinAffected = Mathf.Clamp(_settings.MinAffected, _gridSize / 3, _gridSize);
+        _settings.MaxAffected = Mathf.Clamp(_settings.MaxAffected, Mathf.Max((int)(_gridSize / 1.5f), _settings.MinAffected), _gridSize);
+
+        Config.Write(_settings);
+
+        _modulus = _settings.Modulus <= 1 ? 10 : _settings.Modulus;
         GenerateGrid(_rnd.Next(0, _modulus));
     }
 
     private void GenerateGrid(int initialFinalValue)
     {
         _module.GetComponent<KMSelectable>().Children = new KMSelectable[_grid.Length + 1];
+        _referencePoint.transform.localScale = new Vector3(0.03f * (4f / _width), 0.001f, 0.03f * (4f / _height));
+        _referencePoint.transform.localPosition = new Vector3(-0.0787f + 0.0315f * (2f / _width), 0.0151f, 0.047f - 0.0315f * (2f / _height));
 
         for (int i = 0; i < _grid.Length; i++)
         {
             int x = i;
             _grid[i] = Instantiate(_referencePoint, _module.transform);
-            _grid[i].GetComponent<Selectable>().SetValues(i, _isRalpMode ? _rnd.Next(7, 17) : _rnd.Next(Math.Max(settings.minAffected, 3), Math.Max(settings.maxAffected + 1, 5)), _grid.Length, initialFinalValue, _modulus);
+            _grid[i].GetComponent<Selectable>().SetValues(i, _isRalpMode ? _rnd.Next(_gridSize / 2, _gridSize + 1) : _rnd.Next(Math.Max(_settings.MinAffected, _gridSize / 3), Math.Max(_settings.MaxAffected + 1, (int)(_gridSize / 1.5f))), _grid.Length, initialFinalValue, _modulus);
             _grid[i].GetComponent<Selectable>().SetText(initialFinalValue.ToString());
             _grid[i].GetComponent<Selectable>().SetColour(i, false, _isLogging);
 
-            _grid[i].transform.localPosition += new Vector3(0.0315f * (i % _gridSize), 0, -0.0315f * (i / _gridSize));
+            _grid[i].transform.localPosition += new Vector3(0.0315f * (4f / _width) * (i % _width), 0, -0.0315f * (4f / _height) * (i / _width));
             _grid[i].Parent = _module.GetComponent<KMSelectable>();
 
-            _grid[i].GetComponent<MeshRenderer>().material = _colours[(i ^ (i >> 2)) & 1];
+            _grid[i].GetComponent<MeshRenderer>().material = _colours[((i % _width) ^ (i / _width)) & 1];
             _module.GetComponent<KMSelectable>().Children[x] = _grid[x];
         }
         _module.GetComponent<KMSelectable>().Children[_grid.Length] = _loggingKey;
@@ -140,20 +181,20 @@ public class TortureScript : ModuleScript
         if (!forced)
         {
             string grid = _grid.Select(x => x.GetComponent<Selectable>().GetValue()).Join("");
-            for (int i = 0; i < _gridSize - 1; i++)
-                grid = grid.Insert(_gridSize * (i + 1) + i, "|");
+            for (int i = 0; i < _height - 1; i++)
+                grid = grid.Insert(_width * (i + 1) + i, "|");
             Log("The initial state is: " + grid);
             for (int i = 0; i < _grid.Length; i++)
             {
                 string j = _grid[i].GetComponent<Selectable>().GetOffsets().Join("");
-                for (int k = 0; k < _gridSize - 1; k++)
-                    j = j.Insert(_gridSize * (k + 1) + k, "|");
-                Log("The matrix for tile " + "ABCD"[i % _gridSize].ToString() + "1234"[i / _gridSize].ToString() + " is: " + j);
+                for (int k = 0; k < _height - 1; k++)
+                    j = j.Insert(_width * (k + 1) + k, "|");
+                Log("The matrix for tile " + "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[i % _width].ToString() + "123456789abcdefghijklmnopqrstuvwxyz"[i / _width].ToString() + " is: " + j);
             }
         }
         string log = _twitchPlaysAutosolver.Join("");
-        for (int i = 0; i < _gridSize - 1; i++)
-            log = log.Insert(_gridSize * (i + 1) + i, "|");
+        for (int i = 0; i < _height - 1; i++)
+            log = log.Insert(_width * (i + 1) + i, "|");
         Log("The solution grid is: " + log);
     }
 
@@ -164,7 +205,7 @@ public class TortureScript : ModuleScript
 
         _isLogging = true;
         _moduleRender.color = new Color32(192, 0, 0, 255);
-        Enumerable.Range(0, _grid.Length).Where(x => ((x ^ (x >> 2)) & 1) == 1).ForEach(x => _grid[x].GetComponent<Selectable>().SetTileColour(x, 3));
+        Enumerable.Range(0, _grid.Length).Where(x => (((x % _width) ^ (x / _width)) & 1) == 1).ForEach(x => _grid[x].GetComponent<Selectable>().SetTileColour(x, 3));
         GenerateLogging(true);
     }
 
@@ -224,13 +265,11 @@ public class TortureScript : ModuleScript
                 part++;
                 part %= structure.Length;
                 for (int i = 0; i < _grid.Length; i++)
-                    _grid[i].GetComponent<Selectable>().SetTileColour(i, _rnd.Next(0, 2) == 1 ? (!_isLogging ? 2 : 4) : (_isLogging ? (((i ^ (i >> 2)) & 1) == 1 ? 3 : 0) : ((i ^ (i >> 2) ^ 0) & 1))); // _grid[i].GetComponent<Selectable>().SetSolvedColour(i, structure[part][i] == '1');
+                    _grid[i].GetComponent<Selectable>().SetTileColour(i, _rnd.Next(0, 2) == 1 ? (!_isLogging ? 2 : 4) : (_isLogging ? ((((i % _width) ^ (i / _width)) & 1) == 1 ? 3 : 0) : (((i % _width) ^ (i / _width)) & 1))); // _grid[i].GetComponent<Selectable>().SetSolvedColour(i, structure[part][i] == '1');
             }
         }
-
         for (int i = 0; i < _grid.Length; i++)
             _grid[i].GetComponent<Selectable>().SetTileColour(i, !_isLogging ? 2 : 3);
-
         if (!_isNotEnoughTime)
             _module.HandlePass();
 

@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using Rnd = UnityEngine.Random;
 
@@ -75,7 +76,7 @@ public class TortureScript : ModuleScript
 
     private string[] _solveMessages = { "CONGRATULATIONS!", "おめでとう！ありがとうございます", "MOD  ULESOL  VED!" };
     internal bool _isModuleSolved, _isSeedSet, _isNotEnoughTime, _isLogging, _isAutosolve, _isRalpMode = false, _isAprilFools;
-    private int _seed, _modulus;
+    private int _seed, _modulus, _minAffected, _maxAffected;
     internal int[] _twitchPlaysAutosolver;
     private double[] _solveTimings = { 0.485, 0.86, 1.235, 1.61, 1.985, 2.36, 2.735, 3.485, 3.86, 4.235, 4.61, 4.985, 5.735, 5.985, 6.235, 6.485, 6.86, 7.235, 7.485, 7.735, 7.985, 8.36, 8.735, 9.11, 9.485, 9.86, 10.235, 10.61, 10.985, 11.36, 11.735, 12.11, 12.485, 13.61, 13.985, 14.36, 14.735, 15.11, 15.485, 15.985, 16.235, 16.485, 16.735, 16.985, 17.36, 17.735, 18.485, 18.86, 18.985, 19.11, 19.235, 19.36, 19.485, 19.61, 19.735, 19.86, 19.985, 20.11, 20.235, 20.36, 20.485, 20.61, 20.735, 20.828, 20.922, 21.016, 21.11, 21.203, 21.297, 21.391, 21.485, 21.61, 21.735, 21.86, 21.985, 22.11, 22.235, 22.36, 22.485, 22.61, 22.735, 22.86, 22.985, 23.078, 23.172, 23.266, 23.36, 23.453, 23.547, 23.641, 23.735, 23.828, 23.922, 24.016, 24.11, 24.203, 24.297, 24.391, 24.285 };
 
@@ -125,13 +126,34 @@ public class TortureScript : ModuleScript
 
         _grid = new KMSelectable[_gridSize];
 
-        _settings.MinAffected = Mathf.Clamp(_settings.MinAffected, _gridSize / 3, _gridSize);
-        _settings.MaxAffected = Mathf.Clamp(_settings.MaxAffected, Mathf.Max((int)(_gridSize / 1.5f), _settings.MinAffected), _gridSize);
+        _minAffected = Mathf.Clamp(_settings.MinAffected, _gridSize / 3, _gridSize);
+        _maxAffected = Mathf.Clamp(_settings.MaxAffected, Mathf.Max((int)(_gridSize / 1.5f), _minAffected), _gridSize);
 
         Config.Write(_settings);
 
         _modulus = _settings.Modulus <= 1 ? 10 : _settings.Modulus;
+
+        MissionDescription();
         GenerateGrid(_rnd.Next(0, _modulus));
+    }
+
+    private void MissionDescription()
+    {
+        string missionDescription = Game.Mission.Description;
+        Regex regex = new Regex(@"\[Torture\]\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)");
+
+        if (missionDescription == null)
+            return;
+
+        var match = regex.Match(missionDescription);
+        if (!match.Success)
+            return;
+
+        _modulus = int.Parse(match.Groups[1].Value);
+        _minAffected = int.Parse(match.Groups[2].Value);
+        _maxAffected = int.Parse(match.Groups[3].Value);
+        _height = int.Parse(match.Groups[4].Value);
+        _width = int.Parse(match.Groups[5].Value);
     }
 
     private void GenerateGrid(int initialFinalValue)
@@ -144,7 +166,7 @@ public class TortureScript : ModuleScript
         {
             int x = i;
             _grid[i] = Instantiate(_referencePoint, _module.transform);
-            _grid[i].GetComponent<Selectable>().SetValues(i, _isRalpMode ? _rnd.Next(_gridSize / 2, _gridSize + 1) : _rnd.Next(Math.Max(_settings.MinAffected, _gridSize / 3), Math.Max(_settings.MaxAffected + 1, (int)(_gridSize / 1.5f))), _grid.Length, initialFinalValue, _modulus);
+            _grid[i].GetComponent<Selectable>().SetValues(i, _isRalpMode ? _rnd.Next(_gridSize / 2, _gridSize + 1) : _rnd.Next(Math.Max(_minAffected, _gridSize / 3), Math.Max(_maxAffected + 1, (int)(_gridSize / 1.5f))), _grid.Length, initialFinalValue, _modulus);
             _grid[i].GetComponent<Selectable>().SetText(initialFinalValue.ToString());
             _grid[i].GetComponent<Selectable>().SetColour(i, false, _isLogging);
 

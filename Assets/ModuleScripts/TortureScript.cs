@@ -103,11 +103,11 @@ public class TortureScript : ModuleScript
         ModConfig<TortureSettings> Config = new ModConfig<TortureSettings>("TortureSettings");
         _settings = Config.Read();
 
-        // _width = _isAprilFools ? _rnd.Next(1, 256) : _settings.Width;
-        // _height = _isAprilFools ? _rnd.Next(1, 256) : _settings.Height;
+        _width = _isAprilFools ? _rnd.Next(1, 256) : _settings.Width;
+        _height = _isAprilFools ? _rnd.Next(1, 256) : _settings.Height;
 
-        _width = 26;
-        _height = 26;
+        // _width = 26;
+        // _height = 26;
 
         if(_width * _height < 5 && !_isAprilFools)
         {

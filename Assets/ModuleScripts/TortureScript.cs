@@ -61,12 +61,12 @@ public class TortureScript : ModuleScript
                     new Dictionary<string, object>
                     {
                         { "Key", "Height" },
-                        { "Text", "Height of Grid. Full size of the grid must at least be 5 tiles." }
+                        { "Text", "Height of Grid. Full size of the grid must at least be 5 tiles. Also Clamps at 26." }
                     },
                     new Dictionary<string, object>
                     {
                         { "Key", "Width" },
-                        { "Text", "Width of Grid. Full size of the grid must at least be 5 tiles." }
+                        { "Text", "Width of Grid. Full size of the grid must at least be 5 tiles. Also Clamps at 26." }
                     }
                 }
             }

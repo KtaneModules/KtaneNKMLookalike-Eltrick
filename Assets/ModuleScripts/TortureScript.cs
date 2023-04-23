@@ -107,8 +107,8 @@ public class TortureScript : ModuleScript
         _width = _isAprilFools ? _rnd.Next(1, 256) : _settings.Width;
         _height = _isAprilFools ? _rnd.Next(1, 256) : _settings.Height;
 
-        // _width = 26;
-        // _height = 26;
+        // _width = 5;
+        // _height = 1;
 
         if(_width * _height < 5 && !_isAprilFools)
         {
@@ -300,7 +300,7 @@ public class TortureScript : ModuleScript
             _module.HandlePass();
 
         int messagePicker = _rnd.Next(0, _solveMessages.Length);
-        for (int i = 0; i < _grid.Length; i++)
+        for (int i = 0; i < Math.Min(_grid.Length, _solveMessages[messagePicker].Length); i++)
             _grid[i].GetComponent<Selectable>().SetText(_solveMessages[messagePicker][i].ToString());
 
         // Extras

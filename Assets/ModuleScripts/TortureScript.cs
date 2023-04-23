@@ -123,7 +123,6 @@ public class TortureScript : ModuleScript
         }
 
         _gridSize = _width * _height;
-
         _grid = new KMSelectable[_gridSize];
 
         _minAffected = Mathf.Clamp(_settings.MinAffected, _gridSize / 3, _gridSize);
@@ -132,8 +131,10 @@ public class TortureScript : ModuleScript
         Config.Write(_settings);
 
         _modulus = _settings.Modulus <= 1 ? 10 : _settings.Modulus;
+        _modulus = Mathf.Clamp(_settings.Modulus, 2, int.MaxValue);
 
         MissionDescription();
+
         GenerateGrid(_rnd.Next(0, _modulus));
     }
 
@@ -149,11 +150,14 @@ public class TortureScript : ModuleScript
         if (!match.Success)
             return;
 
-        _modulus = int.Parse(match.Groups[1].Value);
+        _modulus = Mathf.Clamp(int.Parse(match.Groups[1].Value), 2, int.MaxValue);
         _minAffected = int.Parse(match.Groups[2].Value);
         _maxAffected = int.Parse(match.Groups[3].Value);
         _height = int.Parse(match.Groups[4].Value);
         _width = int.Parse(match.Groups[5].Value);
+
+        _gridSize = _width * _height;
+        _grid = new KMSelectable[_gridSize];
     }
 
     private void GenerateGrid(int initialFinalValue)
@@ -166,7 +170,7 @@ public class TortureScript : ModuleScript
         {
             int x = i;
             _grid[i] = Instantiate(_referencePoint, _module.transform);
-            _grid[i].GetComponent<Selectable>().SetValues(i, _isRalpMode ? _rnd.Next(_gridSize / 2, _gridSize + 1) : _rnd.Next(Math.Max(_minAffected, _gridSize / 3), Math.Max(_maxAffected + 1, (int)(_gridSize / 1.5f))), _grid.Length, initialFinalValue, _modulus);
+            _grid[i].GetComponent<Selectable>().SetValues(i, _isRalpMode ? _rnd.Next(_gridSize / 2, _gridSize + 1) : _rnd.Next(_minAffected, _maxAffected + 1), _grid.Length, initialFinalValue, _modulus);
             _grid[i].GetComponent<Selectable>().SetText(initialFinalValue.ToString());
             _grid[i].GetComponent<Selectable>().SetColour(i, false, _isLogging);
 

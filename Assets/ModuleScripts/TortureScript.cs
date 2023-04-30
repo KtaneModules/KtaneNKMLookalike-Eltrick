@@ -22,12 +22,14 @@ public class TortureScript : ModuleScript
     internal AudioClip[] _sounds;
     [SerializeField]
     private Material _moduleRender;
+    [SerializeField]
+    private TortureScriptTP _tortureScriptTP;
 
-    internal int _height = 4, _width = 4;
-    internal int _gridSize = 4;
+    internal int Height = 4, Width = 4;
+    internal int GridSize { get { return Height * Width; } }
     internal KMSelectable[] _grid;
 
-    class TortureSettings
+    internal class TortureSettings
     {
         public int Modulus = 10;
         public int MinAffected = 5;
@@ -35,7 +37,7 @@ public class TortureScript : ModuleScript
         public int Height = 4;
         public int Width = 4;
     }
-    private TortureSettings _settings = new TortureSettings();
+    internal TortureSettings Settings = new TortureSettings();
     private static Dictionary<string, object>[] _tweaksEditorSettings = new Dictionary<string, object>[]
     {
         new Dictionary<string, object>
@@ -74,23 +76,24 @@ public class TortureScript : ModuleScript
         }
     };
 
-    private string[] _solveMessages = { "CONGRATULATIONS!", "おめでとう！ありがとうございます", "MOD  ULESOL  VED!" };
-    internal bool _isModuleSolved, _isSeedSet, _isNotEnoughTime, _isLogging, _isAutosolve, _isRalpMode = false, _isAprilFools;
-    private int _seed, _modulus, _minAffected, _maxAffected;
-    internal int[] _twitchPlaysAutosolver;
-    private double[] _solveTimings = { 0.485, 0.86, 1.235, 1.61, 1.985, 2.36, 2.735, 3.485, 3.86, 4.235, 4.61, 4.985, 5.735, 5.985, 6.235, 6.485, 6.86, 7.235, 7.485, 7.735, 7.985, 8.36, 8.735, 9.11, 9.485, 9.86, 10.235, 10.61, 10.985, 11.36, 11.735, 12.11, 12.485, 13.61, 13.985, 14.36, 14.735, 15.11, 15.485, 15.985, 16.235, 16.485, 16.735, 16.985, 17.36, 17.735, 18.485, 18.86, 18.985, 19.11, 19.235, 19.36, 19.485, 19.61, 19.735, 19.86, 19.985, 20.11, 20.235, 20.36, 20.485, 20.61, 20.735, 20.828, 20.922, 21.016, 21.11, 21.203, 21.297, 21.391, 21.485, 21.61, 21.735, 21.86, 21.985, 22.11, 22.235, 22.36, 22.485, 22.61, 22.735, 22.86, 22.985, 23.078, 23.172, 23.266, 23.36, 23.453, 23.547, 23.641, 23.735, 23.828, 23.922, 24.016, 24.11, 24.203, 24.297, 24.391, 24.285 };
+    private string[] _solveMessages = { "WHAT", "AUTOSOLVECHEATER" };
+    internal bool IsModuleSolved, IsSeedSet, IsNotEnoughTime, IsLogging, IsAutosolve, IsRalpMode = false, IsAprilFools, IsFirstTime = true, IsMission = false;
+    private int _seed;
+    internal int Modulus, MinAffected, MaxAffected;
+    internal int[] TwitchPlaysAutosolver;
+    private float[] _solveTimings = { 0.485f, 0.86f, 1.235f, 1.61f, 1.985f, 2.36f, 2.735f, 3.485f, 3.86f, 4.235f, 4.61f, 4.985f, 5.735f, 5.985f, 6.235f, 6.485f, 6.86f, 7.235f, 7.485f, 7.735f, 7.985f, 8.36f, 8.735f, 9.11f, 9.485f, 9.86f, 10.235f, 10.61f, 10.985f, 11.36f, 11.735f, 12.11f, 12.485f, 13.61f, 13.985f, 14.36f, 14.735f, 15.11f, 15.485f, 15.985f, 16.235f, 16.485f, 16.735f, 16.985f, 17.36f, 17.735f, 18.485f, 18.86f, 18.985f, 19.11f, 19.235f, 19.36f, 19.485f, 19.61f, 19.735f, 19.86f, 19.985f, 20.11f, 20.235f, 20.36f, 20.485f, 20.61f, 20.735f, 20.828f, 20.922f, 21.016f, 21.11f, 21.203f, 21.297f, 21.391f, 21.485f, 21.61f, 21.735f, 21.86f, 21.985f, 22.11f, 22.235f, 22.36f, 22.485f, 22.61f, 22.735f, 22.86f, 22.985f, 23.078f, 23.172f, 23.266f, 23.36f, 23.453f, 23.547f, 23.641f, 23.735f, 23.828f, 23.922f, 24.016f, 24.11f, 24.203f, 24.297f, 24.391f, 24.285f };
 
     // Use this for initialization
     private void Start()
     {
-        _isAprilFools = DateTime.Now.Day == 1 && DateTime.Now.Month == 4;
+        IsAprilFools = DateTime.Now.Day == 1 && DateTime.Now.Month == 4;
 
         _moduleRender.color = new Color32(255, 255, 255, 255);
-        if (!_isSeedSet)
+        if (!IsSeedSet)
         {
             _seed = Rnd.Range(int.MinValue, int.MaxValue);
             Log("The seed is: " + _seed.ToString());
-            _isSeedSet = true;
+            IsSeedSet = true;
         }
 
         _rnd = new System.Random(_seed);
@@ -102,40 +105,39 @@ public class TortureScript : ModuleScript
         _loggingKey.Assign(onInteract: () => { PressLogKey(); });
 
         ModConfig<TortureSettings> Config = new ModConfig<TortureSettings>("TortureSettings");
-        _settings = Config.Read();
+        Settings = Config.Read();
 
-        _width = _isAprilFools ? _rnd.Next(1, 256) : _settings.Width;
-        _height = _isAprilFools ? _rnd.Next(1, 256) : _settings.Height;
+        Width = IsAprilFools ? _rnd.Next(1, 256) : Settings.Width;
+        Height = IsAprilFools ? _rnd.Next(1, 256) : Settings.Height;
 
         // _width = 5;
         // _height = 1;
 
-        if(_width * _height < 5 && !_isAprilFools)
+        if (Width * Height < 5 && !IsAprilFools)
         {
-            if (_width == _height)
-                _width = (int)Mathf.Ceil(5f / _height);
-            else if (_width < _height)
-                _height = 5;
+            if (Width == Height)
+                Width = (int)Mathf.Ceil(5f / Height);
+            else if (Width < Height)
+                Height = 5;
             else
-                _width = 5;
-            _settings.Height = _height;
-            _settings.Width = _width;
+                Width = 5;
+            Settings.Height = Height;
+            Settings.Width = Width;
         }
 
-        _gridSize = _width * _height;
-        _grid = new KMSelectable[_gridSize];
+        _grid = new KMSelectable[GridSize];
 
-        _minAffected = Mathf.Clamp(_settings.MinAffected, _gridSize / 3, _gridSize);
-        _maxAffected = Mathf.Clamp(_settings.MaxAffected, Mathf.Max((int)(_gridSize / 1.5f), _minAffected), _gridSize);
+        MinAffected = Mathf.Clamp(Settings.MinAffected, GridSize / 3, GridSize);
+        MaxAffected = Mathf.Clamp(Settings.MaxAffected, Mathf.Max((int)(GridSize / 1.5f), MinAffected), GridSize);
 
-        Config.Write(_settings);
+        Config.Write(Settings);
 
-        _modulus = _settings.Modulus <= 1 ? 10 : _settings.Modulus;
-        _modulus = Mathf.Clamp(_settings.Modulus, 2, int.MaxValue);
+        Modulus = Settings.Modulus <= 1 ? 10 : Settings.Modulus;
+        Modulus = Mathf.Clamp(Settings.Modulus, 2, int.MaxValue);
 
         MissionDescription();
 
-        GenerateGrid(_rnd.Next(0, _modulus));
+        GenerateGrid(_rnd.Next(0, Modulus));
     }
 
     private void MissionDescription()
@@ -150,55 +152,65 @@ public class TortureScript : ModuleScript
         if (!match.Success)
             return;
 
-        _modulus = Mathf.Clamp(int.Parse(match.Groups[1].Value), 2, int.MaxValue);
-        _minAffected = int.Parse(match.Groups[2].Value);
-        _maxAffected = int.Parse(match.Groups[3].Value);
-        _height = int.Parse(match.Groups[4].Value);
-        _width = int.Parse(match.Groups[5].Value);
+        IsMission = true;
 
-        _gridSize = _width * _height;
-        _grid = new KMSelectable[_gridSize];
+        Modulus = Mathf.Clamp(int.Parse(match.Groups[1].Value), 2, int.MaxValue);
+        MinAffected = int.Parse(match.Groups[2].Value);
+        MaxAffected = int.Parse(match.Groups[3].Value);
+        Height = int.Parse(match.Groups[4].Value);
+        Width = int.Parse(match.Groups[5].Value);
     }
 
-    private void GenerateGrid(int initialFinalValue)
+    internal void GenerateGrid(int initialFinalValue)
     {
-        _module.GetComponent<KMSelectable>().Children = new KMSelectable[_grid.Length + 1];
-        _referencePoint.transform.localScale = new Vector3(0.03f * (4f / _width), 0.001f, 0.03f * (4f / _height));
-        _referencePoint.transform.localPosition = new Vector3(-0.0787f + 0.0315f * (2f / _width), 0.0151f, 0.047f - 0.0315f * (2f / _height));
+        if (!IsFirstTime)
+            _grid.ForEach(x => Destroy(x.gameObject));
 
-        for (int i = 0; i < _grid.Length; i++)
+        _referencePoint.gameObject.SetActive(true);
+        IsFirstTime = false;
+
+        _grid = new KMSelectable[GridSize];
+
+        _tortureScriptTP.UpdateHelpMessage(GridSize);
+
+        _module.GetComponent<KMSelectable>().Children = new KMSelectable[GridSize + 1];
+        _referencePoint.transform.localScale = new Vector3(0.03f * (4f / Width), 0.001f, 0.03f * (4f / Height));
+        _referencePoint.transform.localPosition = new Vector3(-0.0787f + 0.0315f * (2f / Width), 0.0151f, 0.047f - 0.0315f * (2f / Height));
+
+        for (int i = 0; i < GridSize; i++)
         {
             int x = i;
             _grid[i] = Instantiate(_referencePoint, _module.transform);
-            _grid[i].GetComponent<Selectable>().SetValues(i, _isRalpMode ? _rnd.Next(_gridSize / 2, _gridSize + 1) : _rnd.Next(_minAffected, _maxAffected + 1), _grid.Length, initialFinalValue, _modulus);
+            _grid[i].GetComponent<Selectable>().SetValues(i, IsRalpMode ? _rnd.Next(GridSize / 2, GridSize + 1) : _rnd.Next(MinAffected, MaxAffected + 1), GridSize, initialFinalValue, Modulus);
             _grid[i].GetComponent<Selectable>().SetText(initialFinalValue.ToString());
-            _grid[i].GetComponent<Selectable>().SetColour(i, false, _isLogging);
+            _grid[i].GetComponent<Selectable>().SetColour(i, false, IsLogging);
 
-            _grid[i].transform.localPosition += new Vector3(0.0315f * (4f / _width) * (i % _width), 0, -0.0315f * (4f / _height) * (i / _width));
+            _grid[i].transform.localPosition += new Vector3(0.0315f * (4f / Width) * (i % Width), 0, -0.0315f * (4f / Height) * (i / Width));
             _grid[i].Parent = _module.GetComponent<KMSelectable>();
 
-            _grid[i].GetComponent<MeshRenderer>().material = _colours[((i % _width) ^ (i / _width)) & 1];
+            _grid[i].GetComponent<MeshRenderer>().material = _colours[((i % Width) ^ (i / Width)) & 1];
             _module.GetComponent<KMSelectable>().Children[x] = _grid[x];
         }
-        _module.GetComponent<KMSelectable>().Children[_grid.Length] = _loggingKey;
+        _module.GetComponent<KMSelectable>().Children[GridSize] = _loggingKey;
 
         _referencePoint.gameObject.SetActive(false);
         _module.GetComponent<KMSelectable>().UpdateChildrenProperly();
+
         Randomise();
     }
 
     private void Randomise()
     {
-        _twitchPlaysAutosolver = new int[_grid.Length];
-        for (int i = 0; i < _grid.Length; i++)
+        TwitchPlaysAutosolver = new int[GridSize];
+        for (int i = 0; i < GridSize; i++)
         {
-            int random = _rnd.Next(0, _modulus);
-            _twitchPlaysAutosolver[i] = (_modulus - random) % _modulus;
+            int random = _rnd.Next(0, Modulus);
+            TwitchPlaysAutosolver[i] = (Modulus - random) % Modulus;
             for (int j = 0; j < random; j++)
                 _grid[i].GetComponent<Selectable>().ApplyChanges();
         }
-        for (int i = 0; i < _grid.Length; i++)
-            _grid[i].GetComponent<Selectable>().SetColour(i, false, _isLogging);
+        for (int i = 0; i < GridSize; i++)
+            _grid[i].GetComponent<Selectable>().SetColour(i, false, IsLogging);
         GenerateLogging();
     }
 
@@ -207,31 +219,58 @@ public class TortureScript : ModuleScript
         if (!forced)
         {
             string grid = _grid.Select(x => x.GetComponent<Selectable>().GetValue()).Join("");
-            for (int i = 0; i < _height - 1; i++)
-                grid = grid.Insert(_width * (i + 1) + i, "|");
+            for (int i = 0; i < Height - 1; i++)
+                grid = grid.Insert(Width * (i + 1) + i, "|");
             Log("The initial state is: " + grid);
-            for (int i = 0; i < _grid.Length; i++)
+            for (int i = 0; i < GridSize; i++)
             {
                 string j = _grid[i].GetComponent<Selectable>().GetOffsets().Join("");
-                for (int k = 0; k < _height - 1; k++)
-                    j = j.Insert(_width * (k + 1) + k, "|");
-                Log("The matrix for tile " + "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[i % _width].ToString() + "123456789abcdefghijklmnopqrstuvwxyz"[i / _width].ToString() + " is: " + j);
+                for (int k = 0; k < Height - 1; k++)
+                    j = j.Insert(Width * (k + 1) + k, "|");
+
+                string logColumn = IntToString(i % Width, "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray());
+                string real = "";
+
+                if (logColumn.Length > 1)
+                {
+                    for (int k = 0; k < logColumn.Length - 1; k++)
+                        real += ((char)(logColumn[k] - 1)).ToString();
+                }
+                real += logColumn[logColumn.Length - 1].ToString();
+
+                Log("The matrix for tile " + real + (i / Width + 1).ToString() + " is: " + j);
             }
         }
-        string log = _twitchPlaysAutosolver.Join("");
-        for (int i = 0; i < _height - 1; i++)
-            log = log.Insert(_width * (i + 1) + i, "|");
+        string log = TwitchPlaysAutosolver.Join("");
+        for (int i = 0; i < Height - 1; i++)
+            log = log.Insert(Width * (i + 1) + i, "|");
         Log("The solution grid is: " + log);
     }
 
+    public static string IntToString(int value, char[] baseChars)
+    {
+        string result = string.Empty;
+        int targetBase = baseChars.Length;
+
+        do
+        {
+            result = baseChars[value % targetBase] + result;
+            value /= targetBase;
+        }
+        while (value > 0);
+
+        return result;
+    }
+
+
     internal void PressLogKey()
     {
-        if (_isModuleSolved)
+        if (IsModuleSolved)
             return;
 
-        _isLogging = true;
+        IsLogging = true;
         _moduleRender.color = new Color32(192, 0, 0, 255);
-        Enumerable.Range(0, _grid.Length).Where(x => (((x % _width) ^ (x / _width)) & 1) == 1).ForEach(x => _grid[x].GetComponent<Selectable>().SetTileColour(x, 3));
+        Enumerable.Range(0, GridSize).Where(x => (((x % Width) ^ (x / Width)) & 1) == 1).ForEach(x => _grid[x].GetComponent<Selectable>().SetTileColour(x, 3));
         GenerateLogging(true);
     }
 
@@ -245,71 +284,201 @@ public class TortureScript : ModuleScript
 
     internal void SolveModule()
     {
-        _isModuleSolved = true;
+        IsModuleSolved = true;
+        Destroy(_loggingKey.gameObject);
+
         Log("Module solved! Congratulations!");
-        for (int i = 0; i < _grid.Length; i++)
+        for (int i = 0; i < GridSize; i++)
             _grid[i].GetComponent<Selectable>().SetText("");
         if (_info.GetTime() < 60 || _info.GetStrikes() + 1 == Game.Mission.GeneratorSetting.NumStrikes)
-            _isNotEnoughTime = true;
+            IsNotEnoughTime = true;
 
-        if(!_isAutosolve)
-            StartCoroutine(SolveAnimation());
-        else
-        {
-            _module.HandlePass();
-            string text = "AUTOSOLVECHEATER";
-
-            for (int i = 0; i < _grid.Length; i++)
-            {
-                _grid[i].GetComponent<Selectable>().SetText(text[i].ToString());
-                _grid[i].GetComponent<Selectable>().SetColour(i, false, _isLogging);
-            }
-        }
+        StartCoroutine(SolveAnimation());
     }
 
     private IEnumerator SolveAnimation()
     {
-        if (_isNotEnoughTime)
+        if (IsNotEnoughTime)
             _module.HandlePass();
 
-        PlaySound(_module.transform, false, _sounds[2]);
-        yield return new WaitForSeconds(1f);
+        _grid.ForEach(x => x.GetComponent<Selectable>().SetTileColour(x.GetComponent<Selectable>().GetIndex(), 0));
 
-        PlaySound(_module.transform, false, _sounds[1]);
-        double elapsed = 0;
-
-        string test = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam condimentum lorem quis volutpat lortis. Nunc suscipit odio velit, sed tempor mauris ullamcorper id. Interdum et malesuada fames ac anteor";
-        string[] structure = StringToBinary(test).Split(_grid.Length).ToArray();
-
-        int part = -1;
-        while (elapsed < 24.3)
+        if (!IsAutosolve)
         {
-            yield return null;
-            elapsed += Time.deltaTime;
-            if (_solveTimings.Any(x => elapsed - x < 0.0175 && elapsed - x > 0))
+            PlaySound(_module.transform, false, _sounds[2]);
+            yield return new WaitForSeconds(1f);
+
+            PlaySound(_module.transform, false, _sounds[1]);
+            float elapsed = 0;
+
+            string test = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam condimentum lorem quis volutpat lortis. Nunc suscipit odio velit, sed tempor mauris ullamcorper id. Interdum et malesuada fames ac anteor";
+            string[] structure = StringToBinary(test).Split(GridSize).ToArray();
+
+            int part = -1;
+            while (elapsed < 24.3f)
             {
-                part++;
-                part %= structure.Length;
-                for (int i = 0; i < _grid.Length; i++)
-                    _grid[i].GetComponent<Selectable>().SetTileColour(i, _rnd.Next(0, 2) == 1 ? (!_isLogging ? 2 : 4) : (_isLogging ? ((((i % _width) ^ (i / _width)) & 1) == 1 ? 3 : 0) : (((i % _width) ^ (i / _width)) & 1))); // _grid[i].GetComponent<Selectable>().SetSolvedColour(i, structure[part][i] == '1');
+                yield return null;
+                elapsed += Time.deltaTime;
+                if (_solveTimings.Any(x => elapsed - x < 0.0175f && elapsed - x > 0f))
+                {
+                    part++;
+                    part %= structure.Length;
+                    for (int i = 0; i < GridSize; i++)
+                        _grid[i].GetComponent<Selectable>().SetTileColour(i, _rnd.Next(0, 2) == 1 ? (!IsLogging ? 2 : 4) : (IsLogging ? ((((i % Width) ^ (i / Width)) & 1) == 1 ? 3 : 0) : 0)); // _grid[i].GetComponent<Selectable>().SetSolvedColour(i, structure[part][i] == '1');
+                }
             }
         }
-        for (int i = 0; i < _grid.Length; i++)
-            _grid[i].GetComponent<Selectable>().SetTileColour(i, !_isLogging ? 2 : 3);
-        if (!_isNotEnoughTime)
+
+        //for (int i = 0; i < _gridSize; i++)
+        //    _grid[i].GetComponent<Selectable>().SetTileColour(i, !IsLogging ? 2 : 3);
+        if (!IsNotEnoughTime)
             _module.HandlePass();
 
-        int messagePicker = _rnd.Next(0, _solveMessages.Length);
-        for (int i = 0; i < Math.Min(_grid.Length, _solveMessages[messagePicker].Length); i++)
-            _grid[i].GetComponent<Selectable>().SetText(_solveMessages[messagePicker][i].ToString());
+        int messagePicker = IsAutosolve ? 1 : 0;
+        string message = _solveMessages[messagePicker];
+
+        for (int i = 0; i < message.Length * 2; i++)
+        {
+            _grid.ForEach(x => x.GetComponent<Selectable>().SetTileColour(x.GetComponent<Selectable>().GetIndex(), 0));
+
+            DrawCharacter(message[i % message.Length]);
+            yield return new WaitForSeconds(.25f);
+        }
+
+        _grid.ForEach(x => Destroy(x.gameObject));
+
+        //if (_gridSize >= 64)
+        //{
+        //    message = "WHAT";
+        //    for (int i = 0; i < _gridSize; i++)
+        //        _grid[i].GetComponent<Selectable>().SetText(message[i % message.Length].ToString());
+        //}
+        //for (int i = 0; i < Math.Min(_gridSize, message.Length); i++)
+        //    _grid[i].GetComponent<Selectable>().SetText(message[i].ToString());
 
         // Extras
         // yield return new WaitForSeconds(3f);
-        // int[] randomiser = Enumerable.Range(0, _grid.Length).ToArray().Shuffle();
-        // for (int i = 0; i < _grid.Length; i++)
+        // int[] randomiser = Enumerable.Range(0, _gridSize).ToArray().Shuffle();
+        // for (int i = 0; i < _gridSize; i++)
         // {
         //     _grid[randomiser[i]].gameObject.SetActive(false);
         //     yield return new WaitForSeconds(.15f);
         // }
+    }
+
+    private void DrawCharacter(char character)
+    {
+        Vector2 bias = new Vector2((float)_rnd.NextDouble() / 10 - .05f, (float)_rnd.NextDouble() / 10 - .05f);
+        switch (character)
+        {
+            case 'W':
+                DrawLine(new Vector2(0, 0), new Vector2(.25f, 1), bias);
+                DrawLine(new Vector2(.25f, 1), new Vector2(.5f, .5f), bias);
+                DrawLine(new Vector2(.5f, .5f), new Vector2(.75f, 1), bias);
+                DrawLine(new Vector2(.75f, 1), new Vector2(1, 0), bias);
+                break;
+            case 'H':
+                DrawLine(new Vector2(0, 0), new Vector2(0, 1), bias);
+                DrawLine(new Vector2(1, 0), new Vector2(1, 1), bias);
+                DrawLine(new Vector2(0, .5f), new Vector2(1, .5f), bias);
+                break;
+            case 'A':
+                DrawLine(new Vector2(0, 1), new Vector2(.5f, 0), bias);
+                DrawLine(new Vector2(.5f, 0), new Vector2(1, 1), bias);
+                DrawLine(new Vector2(.25f, .5f), new Vector2(.75f, .5f), bias);
+                break;
+            case 'T':
+                DrawLine(new Vector2(0, 0), new Vector2(1, 0), bias);
+                DrawLine(new Vector2(.5f, 0), new Vector2(.5f, 1), bias);
+                break;
+            case 'U':
+                DrawLine(new Vector2(0, 0), new Vector2(0, 1), bias);
+                DrawLine(new Vector2(0, 1), new Vector2(1, 1), bias);
+                DrawLine(new Vector2(1, 1), new Vector2(1, 0), bias);
+                break;
+            case 'O':
+                DrawLine(new Vector2(0, 0), new Vector2(0, 1), bias);
+                DrawLine(new Vector2(0, 1), new Vector2(1, 1), bias);
+                DrawLine(new Vector2(1, 1), new Vector2(1, 0), bias);
+                DrawLine(new Vector2(1, 0), new Vector2(0, 0), bias);
+                break;
+            case 'S':
+                DrawLine(new Vector2(1, 0), new Vector2(0, 0), bias);
+                DrawLine(new Vector2(0, 0), new Vector2(0, .5f), bias);
+                DrawLine(new Vector2(0, .5f), new Vector2(1, .5f), bias);
+                DrawLine(new Vector2(1, .5f), new Vector2(1, 1), bias);
+                DrawLine(new Vector2(1, 1), new Vector2(0, 1), bias);
+                break;
+            case 'L':
+                DrawLine(new Vector2(0, 0), new Vector2(0, 1), bias);
+                DrawLine(new Vector2(0, 1), new Vector2(1, 1), bias);
+                break;
+            case 'V':
+                DrawLine(new Vector2(0, 0), new Vector2(.5f, 1), bias);
+                DrawLine(new Vector2(.5f, 1), new Vector2(1, 0), bias);
+                break;
+            case 'E':
+                DrawLine(new Vector2(1, 0), new Vector2(0, 0), bias);
+                DrawLine(new Vector2(0, 0), new Vector2(0, 1), bias);
+                DrawLine(new Vector2(0, 1), new Vector2(1, 1), bias);
+                DrawLine(new Vector2(0, .5f), new Vector2(1, .5f), bias);
+                break;
+            case 'C':
+                DrawLine(new Vector2(1, 0), new Vector2(0, 0), bias);
+                DrawLine(new Vector2(0, 0), new Vector2(0, 1), bias);
+                DrawLine(new Vector2(0, 1), new Vector2(1, 1), bias);
+                break;
+            case 'R':
+                DrawLine(new Vector2(1, 0), new Vector2(0, 0), bias);
+                DrawLine(new Vector2(0, 0), new Vector2(0, 1), bias);
+                DrawLine(new Vector2(1, 0), new Vector2(1, .5f), bias);
+                DrawLine(new Vector2(0, .5f), new Vector2(1, .5f), bias);
+                DrawLine(new Vector2(.5f, .5f), new Vector2(1, 1), bias);
+                break;
+        }
+    }
+
+    private void DrawLine(Vector2 start, Vector2 end, Vector2 bias)
+    {
+        Vector2 resolution = new Vector2(Width, Height);
+
+        start = Vector2.Scale(start, resolution - Vector2.one);
+        end = Vector2.Scale(end, resolution - Vector2.one);
+
+        Vector2 difference = end - start;
+
+        Vector2 step;
+        int stepCount;
+
+        if (difference.sqrMagnitude < 1)
+        {
+            Vector2 v = start + bias;
+            v = new Vector2(Mathf.Round(v.x), Mathf.Round(v.y));
+
+            int index = (int)v.x + Width * (int)v.y;
+            _grid[index].GetComponent<Selectable>().SetTileColour(index, IsAutosolve ? 4 : 2);
+
+            return;
+        }
+        if (Mathf.Abs(difference.x) > Mathf.Abs(difference.y))
+        {
+            step = new Vector2(Mathf.Sign(difference.x), difference.y / Mathf.Abs(difference.x));
+            stepCount = Mathf.FloorToInt(Mathf.Abs(difference.x));
+        }
+        else
+        {
+            step = new Vector2(difference.x / Mathf.Abs(difference.y), Mathf.Sign(difference.y));
+            stepCount = Mathf.FloorToInt(Mathf.Abs(difference.y));
+        }
+
+
+        for (int i = 0; i <= stepCount; i++)
+        {
+            Vector2 v = start + step * i + bias;
+            v = new Vector2(Mathf.Round(v.x), Mathf.Round(v.y));
+
+            int index = (int)v.x + Width * (int)v.y;
+            _grid[index].GetComponent<Selectable>().SetTileColour(index, IsAutosolve ? 4 : 2);
+        }
     }
 }

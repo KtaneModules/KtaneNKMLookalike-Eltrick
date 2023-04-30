@@ -33,12 +33,12 @@ public class Selectable : MonoBehaviour
 
     private void ButtonPress()
     {
-        if (Parent._isModuleSolved)
+        if (Parent.IsModuleSolved)
             return;
         Parent.PlaySound(Parent.transform, false, Parent._sounds[0]);
         ApplyChanges();
         int check = Parent._grid.GroupBy(i => i.GetComponent<Selectable>().GetValue()).OrderByDescending(i => i.Count()).First().ToArray()[0].GetComponent<Selectable>().GetValue();
-        Parent._twitchPlaysAutosolver[_index] = (Parent._twitchPlaysAutosolver[_index] + 9) % 10;
+        Parent.TwitchPlaysAutosolver[_index] = (Parent.TwitchPlaysAutosolver[_index] + 9) % 10;
         if (Parent._grid.All(x => x.GetComponent<Selectable>().GetValue() == check))
             Parent.SolveModule();
     }
@@ -53,14 +53,14 @@ public class Selectable : MonoBehaviour
         for (int i = 0; i < _offsets.Length; i++)
         {
             Parent._grid[i].GetComponent<Selectable>().Offset(_offsets[i]);
-            SetColour(i, _offsets[i] != 0, Parent._isLogging);
+            SetColour(i, _offsets[i] != 0, Parent.IsLogging);
         }
     }
 
     public void SetColour(int index, bool changed, bool logging)
     {
         if (!changed)
-            Parent._grid[index].GetComponentInChildren<TextMesh>().color = (((index % Parent._width) ^ (index / Parent._width)) & 1) == 1 ? new Color32(0, 0, 0, 255) : (logging ? new Color32(192, 0, 0, 255) : new Color32(0, 192, 255, 255));
+            Parent._grid[index].GetComponentInChildren<TextMesh>().color = (((index % Parent.Width) ^ (index / Parent.Width)) & 1) == 1 ? new Color32(0, 0, 0, 255) : (logging ? new Color32(192, 0, 0, 255) : new Color32(0, 192, 255, 255));
         else
             Parent._grid[index].GetComponentInChildren<TextMesh>().color = new Color32(255, 255, 255, 255);
     }
@@ -70,7 +70,7 @@ public class Selectable : MonoBehaviour
         ButtonText.color = new Color(0, 0, 0);
         Parent._grid[index].GetComponent<MeshRenderer>().material = Parent._colours[colour];
         if (colour == 3)
-            Enumerable.Range(0, Parent._grid.Length).Where(x => (((x % Parent._width) ^ (x / Parent._width)) & 1) == 0).ForEach(x => Parent._grid[x].GetComponentInChildren<TextMesh>().color = new Color32(192, 0, 0, 255));
+            Enumerable.Range(0, Parent._grid.Length).Where(x => (((x % Parent.Width) ^ (x / Parent.Width)) & 1) == 0).ForEach(x => Parent._grid[x].GetComponentInChildren<TextMesh>().color = new Color32(192, 0, 0, 255));
     }
 
     public void SetText(string x)
@@ -93,5 +93,10 @@ public class Selectable : MonoBehaviour
     public int[] GetOffsets()
     {
         return _offsets;
+    }
+
+    public int GetIndex()
+    {
+        return _index;
     }
 }

@@ -679,7 +679,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   TwitchHelpMessage: <!{0} [16 digits]> to construct the array for which to press
     each position in reading order that number of times. <!{0} [A-D][1-4]> to press
-    that specific coordinate.
+    that specific coordinate. The first command type is not chainable, nor can you
+    use both types of commands in one, however the second command type can have multiple
+    coordinates separated by spaces.
   TwitchManualCode: 
   TwitchAbandonModule: []
 --- !u!114 &114265012803826022
@@ -766,7 +768,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 96b1d4c0e55414243a2cc22834617ecb, type: 3}
   - {fileID: 8300000, guid: f2776383c4acc6e48b7d759756bd05e0, type: 3}
   _moduleRender: {fileID: 2100000, guid: 26cdee844cb231740941635a5e5962c7, type: 2}
-  _gridSize: 4
+  _tortureScriptTP: {fileID: 114262590222185478}
 --- !u!114 &114347789204855088
 MonoBehaviour:
   m_ObjectHideFlags: 1

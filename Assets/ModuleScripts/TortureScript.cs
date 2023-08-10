@@ -77,6 +77,13 @@ public class TortureScript : ModuleScript
     };
 
     private string[] _solveMessages = { "WHAT", "AUTOSOLVECHEATER" };
+    private string[] _ramblings =
+    {
+        "So you actually solved this module, huh. Why, exactly, have you subjected yourself to this piece of crap module? I just cannot understand how anyone would want to do any of this.",
+        "Honestly, do you really think that this tedium is necessary? You don't have enough in life already? Is that what it's all about?",
+        "Questions, questions, unsatisfying answers galore. Here's a question for you: Do you really think that you matter?",
+        "The list of ramblings might get updated, it might also not, because I might be dead, or I might not, or because of disinterest, or other factors. You see how useless picking from all of these choices is?"
+    };
     internal bool IsModuleSolved, IsSeedSet, IsNotEnoughTime, IsLogging, IsAutosolve, IsRalpMode = false, IsAprilFools, IsFirstTime = true, IsMission = false;
     private int _seed;
     internal int Modulus, MinAffected, MaxAffected;
@@ -328,8 +335,11 @@ public class TortureScript : ModuleScript
             PlaySound(_module.transform, false, _sounds[1]);
             float elapsed = 0;
 
-            string test = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam condimentum lorem quis volutpat lortis. Nunc suscipit odio velit, sed tempor mauris ullamcorper id. Interdum et malesuada fames ac anteor";
+            string test = _ramblings[_rnd.Next(0, _ramblings.Length)];
             string[] structure = StringToBinary(test).Split(GridSize).ToArray();
+
+            while (structure[structure.Length - 1].Length != GridSize)
+                structure[structure.Length - 1] = structure[structure.Length - 1].PadRight(1, (char)('0' + _rnd.Next(0, 2)));
 
             int part = -1;
             while (elapsed < 24.3f)
@@ -341,7 +351,7 @@ public class TortureScript : ModuleScript
                     part++;
                     part %= structure.Length;
                     for (int i = 0; i < GridSize; i++)
-                        _grid[i].SetTileColour(i, _rnd.Next(0, 2) == 1 ? (!IsLogging ? 2 : 4) : (IsLogging ? ((((i % Width) ^ (i / Width)) & 1) == 1 ? 3 : 0) : 0)); // _grid[i].SetSolvedColour(i, structure[part][i] == '1');
+                        _grid[i].SetTileColour(i, structure[part][i] == '1' ? (!IsLogging ? 2 : 4) : (IsLogging ? ((((i % Width) ^ (i / Width)) & 1) == 1 ? 3 : 0) : 0)); // _grid[i].SetSolvedColour(i, structure[part][i] == '1');
                 }
             }
         }
@@ -354,7 +364,7 @@ public class TortureScript : ModuleScript
         int messagePicker = IsAutosolve ? 1 : 0;
         string message = _solveMessages[messagePicker];
 
-        for (int i = 0; i < message.Length * 2; i++)
+        for (int i = 0; i < message.Length; i++)
         {
             _grid.ForEach(x => x.SetTileColour(x.GetIndex(), 0));
 

@@ -95,29 +95,37 @@ public class TortureScriptTP : TPScript<TortureScript>
                 int r = int.Parse(Regex.Match(presses[i], "[0-9]+").Value);
 
                 yield return null;
-                Module._grid[c + (r - 1) * Module.Width].Button.OnInteract();
+                if (c + (r - 1) * Module.Width >= Module.GridSize)
+                    yield return "sendtochaterror That button does not exist on this grid. Try again.";
+                else
+                    Module._grid[c + (r - 1) * Module.Width].Button.OnInteract();
                 yield return new WaitForSeconds(.1f);
             }
         }
-        else if(Regex.IsMatch(command, @"(RESIZE|SETSIZE)\s+[0-9]+\s+[0-9]+") && !Module.IsMission)
+        else if(Regex.IsMatch(command, @"(RESIZE|SETSIZE)\s+[0-9]+\s+[0-9]+"))
         {
-            var match = Regex.Match(command, @"(RESIZE|SETSIZE)\s+([0-9]+)\s+([0-9]+)");
-
-            int h = int.Parse(match.Groups[2].Value);
-            int w = int.Parse(match.Groups[3].Value);
-
-            if (h * w >= 5)
-            {
-                Module.Height = int.Parse(match.Groups[2].Value);
-                Module.Width = int.Parse(match.Groups[3].Value);
-
-                Module.MinAffected = Mathf.Clamp(Module.Settings.MinAffected, Module.GridSize / 3, Module.GridSize);
-                Module.MaxAffected = Mathf.Clamp(Module.Settings.MaxAffected, Mathf.Max((int)(Module.GridSize / 1.5f), Module.MinAffected), Module.GridSize);
-
-                Module.GenerateGrid(Module.Modulus);
-            }
+            if (Module.IsMission)
+                yield return "sendtochat We are in a mission. Grid size changes are disallowed.";
             else
-                yield return "sendtochaterror The grid size must be at least 5 tiles.";
+            {
+                var match = Regex.Match(command, @"(RESIZE|SETSIZE)\s+([0-9]+)\s+([0-9]+)");
+
+                int h = int.Parse(match.Groups[2].Value);
+                int w = int.Parse(match.Groups[3].Value);
+
+                if (h * w >= 5)
+                {
+                    Module.Height = int.Parse(match.Groups[2].Value);
+                    Module.Width = int.Parse(match.Groups[3].Value);
+
+                    Module.MinAffected = Mathf.Clamp(Module.Settings.MinAffected, Module.GridSize / 3, Module.GridSize);
+                    Module.MaxAffected = Mathf.Clamp(Module.Settings.MaxAffected, Mathf.Max((int)(Module.GridSize / 1.5f), Module.MinAffected), Module.GridSize);
+
+                    Module.GenerateGrid(Module.Modulus);
+                }
+                else
+                    yield return "sendtochaterror The grid size must be at least 5 tiles.";
+            }
         }
         else
             yield return "sendtochaterror The module did not detect any valid command formats. Check your command.";

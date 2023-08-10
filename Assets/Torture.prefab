@@ -96,7 +96,7 @@ GameObject:
   - component: {fileID: 102020292020822754}
   - component: {fileID: 114682187627793036}
   m_Layer: 0
-  m_Name: New Text
+  m_Name: Digit
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -229,8 +229,8 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1460032950367286}
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0.6, z: -0.001}
-  m_LocalScale: {x: 0.06, y: 0.06, z: 0.06}
+  m_LocalPosition: {x: 0, y: 0.6, z: -0.08}
+  m_LocalScale: {x: 0.07, y: 0.07, z: 0.07}
   m_Children: []
   m_Father: {fileID: 4651275720273140}
   m_RootOrder: 0
@@ -512,7 +512,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_Materials:
-  - {fileID: 2100000, guid: 0d0701df7a338274f89893f54d3b3aa2, type: 2}
+  - {fileID: 2100000, guid: ed371874303cf6342aa60390843e4fb6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -608,7 +608,7 @@ TextMesh:
   m_FontSize: 144
   m_FontStyle: 0
   m_RichText: 1
-  m_Font: {fileID: 12800000, guid: b7635c49af9599a42b071be77fe30678, type: 3}
+  m_Font: {fileID: 12800000, guid: 78acff1868817174b8139e7cd3fc5883, type: 3}
   m_Color:
     serializedVersion: 2
     rgba: 4294967295

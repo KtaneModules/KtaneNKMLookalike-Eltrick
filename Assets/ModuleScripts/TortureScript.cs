@@ -339,7 +339,7 @@ public class TortureScript : ModuleScript
             string[] structure = StringToBinary(test).Split(GridSize).ToArray();
 
             while (structure[structure.Length - 1].Length != GridSize)
-                structure[structure.Length - 1] = structure[structure.Length - 1].PadRight(1, (char)('0' + _rnd.Next(0, 2)));
+                structure[structure.Length - 1] = structure[structure.Length - 1].PadRight(GridSize, new char[] { '0', '1' }[_rnd.Next(0, 2)]);
 
             int part = -1;
             while (elapsed < 24.3f)

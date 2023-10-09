@@ -6,8 +6,8 @@ using UnityEngine;
 
 public class TortureScriptTP : TPScript<TortureScript>
 {
-    private string TwitchHelpMessage = "<!{0} <16 digits>> to construct the array for which to press each position in reading order that number of times. <!{0} [coordinate]> to press that specific coordinate, with the column being specified by letters, with the column after Z being AA, and the row being specified by a number. The first command type is not chainable, nor can you use both types of commands in one, however the second command type can have multiple coordinates separated by spaces. <!{0} <16 numbers separated by spaces>> to also construct a more precise array for which to press the buttons, similar to the first command. <!{0} (resize|setsize) [height] [width]> to resize the grid, and reset all values. However, width * height must be at least 5. This command is disallowed in a mission.";
-    private int _offset = 55; // Offset multiplier
+    private string TwitchHelpMessage = "<!{0} cycle [delay]> to press each tile in reading order once, with given delay; the delay can be in decimal form, e.g. 2.47. <!{0} <16 digits>> to construct the array for which to press each position in reading order that number of times. <!{0} [coordinate]> to press that specific coordinate, with the column being specified by letters, with the column after Z being AA, and the row being specified by a number. The first command type is not chainable, nor can you use both types of commands in one, however the second command type can have multiple coordinates separated by spaces. <!{0} <16 numbers separated by spaces>> to also construct a more precise array for which to press the buttons, similar to the first command. <!{0} (resize|setsize) [height] [width]> to resize the grid, and reset all values. However, width * height must be at least 9. This command is disallowed in a mission.";
+    private int _offset = 40; // Offset multiplier
 
     public override IEnumerator ForceSolve()
     {
@@ -35,7 +35,17 @@ public class TortureScriptTP : TPScript<TortureScript>
         command = command.ToUpperInvariant();
 
         yield return null;
-        if (Regex.IsMatch(command, "[0-9]{" + Module.GridSize.ToString() + "}") && Module.Modulus <= 10)
+        if (Regex.IsMatch(command, "CYCLE [0-9]+(\\.[0-9]+)?"))
+        {
+            float delay = float.Parse(Regex.Match(command, "[0-9]+(\\.[0-9]+)?").Value);
+            yield return "trycancel";
+            for(int i = 0; i < Module._grid.Length; i++)
+            {
+                Module._grid[i].Button.OnInteract();
+                yield return new WaitForSeconds(delay);
+            }
+        }
+        else if (Regex.IsMatch(command, "[0-9]{" + Module.GridSize.ToString() + "}") && Module.Modulus <= 10)
             for (int i = 0; i < Module._grid.Length; i++)
                 for (int j = 0; j < int.Parse(command[i].ToString()); j++)
                 {
@@ -113,7 +123,7 @@ public class TortureScriptTP : TPScript<TortureScript>
                 int h = int.Parse(match.Groups[2].Value);
                 int w = int.Parse(match.Groups[3].Value);
 
-                if (h * w >= 5)
+                if (h * w >= 9)
                 {
                     Module.Height = int.Parse(match.Groups[2].Value);
                     Module.Width = int.Parse(match.Groups[3].Value);
@@ -124,7 +134,7 @@ public class TortureScriptTP : TPScript<TortureScript>
                     Module.GenerateGrid(Module.Modulus);
                 }
                 else
-                    yield return "sendtochaterror The grid size must be at least 5 tiles.";
+                    yield return "sendtochaterror The grid size must be at least 9 tiles.";
             }
         }
         else
@@ -142,7 +152,14 @@ public class TortureScriptTP : TPScript<TortureScript>
 
     public void UpdateHelpMessage(int gridSize)
     {
-        Help = "<!{0} <" + gridSize.ToString() + " digits>> to construct the array for which to press each position in reading order that number of times. <!{0} [coordinate]> to press that specific coordinate, with the column being specified by letters, with the column after Z being AA, and the row being specified by a number. The first command type is not chainable, nor can you use both types of commands in one, however the second command type can have multiple coordinates separated by spaces. <!{0} (resize|setsize) [height] [width]> to resize the grid, and reset all values. However, width * height must be at least 5. This command is disallowed in a mission.";
+        if (Module.Modulus <= 10)
+        {
+            Help = "<!{0} cycle [delay]> to press each tile in reading order once, with given delay; the delay can be in decimal form, e.g. 2.47. <!{0} <" + Module._grid.Length.ToString() + " digits>> to construct the array for which to press each position in reading order that number of times. <!{0} [coordinate]> to press that specific coordinate, with the column being specified by letters, with the column after Z being AA, and the row being specified by a number. The first command type is not chainable, nor can you use both types of commands in one, however the second command type can have multiple coordinates separated by spaces. <!{0} <" + Module._grid.Length.ToString() + " numbers separated by spaces>> to also construct a more precise array for which to press the buttons, similar to the first command. <!{0} (resize|setsize) [height] [width]> to resize the grid, and reset all values. However, width * height must be at least 9. This command is disallowed in a mission.";
+        }
+        else
+        {
+            Help = "<!{0} cycle [delay]> to press each tile in reading order once, with given delay; the delay can be in decimal form, e.g. 2.47. <!{0} [coordinate]> to press that specific coordinate, with the column being specified by letters, with the column after Z being AA, and the row being specified by a number. You cannot use both types of commands in one, however the second command type can have multiple coordinates separated by spaces. <!{0} <" + Module._grid.Length.ToString() + " numbers separated by spaces>> to construct a precise array for which to press the buttons. <!{0} (resize|setsize) [height] [width]> to resize the grid, and reset all values. However, width * height must be at least 9. This command is disallowed in a mission.";
+        }
         TwitchHelpMessage = Help;
     }
 }

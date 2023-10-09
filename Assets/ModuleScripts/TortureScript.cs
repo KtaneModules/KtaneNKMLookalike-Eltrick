@@ -84,7 +84,7 @@ public class TortureScript : ModuleScript
         "Questions, questions, unsatisfying answers galore. Here's a question for you: Do you really think that you matter?",
         "The list of ramblings might get updated, it might also not, because I might be dead, or I might not, or because of disinterest, or other factors. You see how useless picking from all of these choices is?"
     };
-    internal bool IsModuleSolved, IsSeedSet, IsNotEnoughTime, IsLogging, IsAutosolve, IsRalpMode = false, IsAprilFools, IsFirstTime = true, IsMission = false;
+    internal bool IsModuleSolved, IsSeedSet, IsNotEnoughTime, IsLogging, IsAutosolve, IsRalpMode = false, IsAprilFools, IsFirstTime = true, IsMission = false, FirstTime = false;
     private int _seed;
     internal int Modulus, MinAffected, MaxAffected;
     internal int[] TwitchPlaysAutosolver;
@@ -120,22 +120,28 @@ public class TortureScript : ModuleScript
         // _width = 5;
         // _height = 1;
 
-        if (Width * Height < 5 && !IsAprilFools)
+        if (Width * Height < 9 && !IsAprilFools)
         {
-            if (Width == Height)
-                Width = (int)Mathf.Ceil(5f / Height);
-            else if (Width < Height)
-                Height = 5;
-            else
-                Width = 5;
+            Height = 3;
+            Width = 3;
+
             Settings.Height = Height;
             Settings.Width = Width;
         }
 
         _grid = new Selectable[GridSize];
 
-        MinAffected = Mathf.Clamp(Settings.MinAffected, GridSize / 3, GridSize);
-        MaxAffected = Mathf.Clamp(Settings.MaxAffected, Mathf.Max((int)(GridSize / 1.5f), MinAffected), GridSize);
+        if (FirstTime)
+        {
+            FirstTime = false;
+            MinAffected = Settings.MinAffected;
+            MaxAffected = Settings.MaxAffected;
+        }
+        else
+        {
+            MinAffected = Mathf.Clamp(Settings.MinAffected, GridSize / 3, GridSize);
+            MaxAffected = Mathf.Clamp(Settings.MaxAffected, Mathf.Max((int)(GridSize / 1.5f), MinAffected), GridSize);
+        }
 
         Config.Write(Settings);
 

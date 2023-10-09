@@ -15,6 +15,6 @@ MonoBehaviour:
   title: Torture
   author: Eltrick
   description: Torment, Extended Version.
-  version: 0.86.36
+  version: 0.87.39
   outputFolder: build
   previewImage: {fileID: 2800000, guid: 9266cb7a1179f4d4a92b1fb31dcd1706, type: 3}

@@ -14,7 +14,11 @@ MonoBehaviour:
   id: TortureModule
   title: Torture
   author: Eltrick
-  description: Torment, Extended Version.
-  version: 0.87.39
+  description: 'Press tiles on a grid that offset other tiles'' values until all values
+    are the same under a modulus.
+
+
+    Module ID: TortureModule'
+  version: 0.87.41
   outputFolder: build
   previewImage: {fileID: 2800000, guid: 9266cb7a1179f4d4a92b1fb31dcd1706, type: 3}

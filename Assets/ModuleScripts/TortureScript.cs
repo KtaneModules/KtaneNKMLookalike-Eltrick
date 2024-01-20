@@ -84,7 +84,7 @@ public class TortureScript : ModuleScript
         "Questions, questions, unsatisfying answers galore. Here's a question for you: Do you really think that you matter?",
         "The list of ramblings might get updated, it might also not, because I might be dead, or I might not, or because of disinterest, or other factors. You see how useless picking from all of these choices is?"
     };
-    internal bool IsModuleSolved, IsSeedSet, IsNotEnoughTime, IsLogging, IsAutosolve, IsRalpMode = false, IsAprilFools, IsFirstTime = true, IsMission = false, FirstTime = false;
+    internal bool IsModuleSolved, IsSeedSet, IsNotEnoughTime, IsLogging, IsAutosolve, IsRalpMode = false, IsAprilFools, IsFirstTime = true, IsMission = false, FirstTime = true;
     private int _seed;
     internal int Modulus, MinAffected, MaxAffected;
     internal int[] TwitchPlaysAutosolver;

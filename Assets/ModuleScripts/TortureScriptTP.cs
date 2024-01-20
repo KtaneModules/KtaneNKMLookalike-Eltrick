@@ -38,11 +38,11 @@ public class TortureScriptTP : TPScript<TortureScript>
         if (Regex.IsMatch(command, "CYCLE [0-9]+(\\.[0-9]+)?"))
         {
             float delay = float.Parse(Regex.Match(command, "[0-9]+(\\.[0-9]+)?").Value);
-            yield return "trycancel";
             for(int i = 0; i < Module._grid.Length; i++)
             {
                 Module._grid[i].Button.OnInteract();
                 yield return new WaitForSeconds(delay);
+                yield return "trycancel";
             }
         }
         else if (Regex.IsMatch(command, "[0-9]{" + Module.GridSize.ToString() + "}") && Module.Modulus <= 10)

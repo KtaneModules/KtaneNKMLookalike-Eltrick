@@ -47,10 +47,11 @@ public class TortureScriptTP : TPScript<TortureScript>
         }
         else if (Regex.IsMatch(command, "[0-9]{" + Module.GridSize.ToString() + "}") && Module.Modulus <= 10)
             for (int i = 0; i < Module._grid.Length; i++)
-                for (int j = 0; j < int.Parse(command[i].ToString()); j++)
+                for (int j = 0; j < int.Parse(command[i].ToString()) % Module.Modulus; j++)
                 {
                     Module._grid[i].Button.OnInteract();
                     yield return new WaitForSeconds(.1f / Mathf.Pow(Module.GridSize / 16f, 1.5f));
+                    yield return "trycancel";
                 }
         else if (Regex.IsMatch(command, "([0-9]+\\s){" + (Module.GridSize - 1).ToString() + "}[0-9]+"))
         {
@@ -64,11 +65,13 @@ public class TortureScriptTP : TPScript<TortureScript>
                 if (!int.TryParse(numbers[i], out o))
                     continue;
 
+                o %= Module.Modulus;
+
                 while(true)
                 {
                     if(time * (Mathf.Pow(Module.GridSize / 16f, 1.5f) * Module.Modulus) <= p + 1)
                     {
-                        yield return null;
+                        yield return "trycancel";
                         if (p > 0)
                         {
                             Module._grid[i].ApplyChanges(p - 1);
@@ -110,6 +113,7 @@ public class TortureScriptTP : TPScript<TortureScript>
                 else
                     Module._grid[c + (r - 1) * Module.Width].Button.OnInteract();
                 yield return new WaitForSeconds(.1f);
+                yield return "trycancel";
             }
         }
         else if(Regex.IsMatch(command, @"(RESIZE|SETSIZE)\s+[0-9]+\s+[0-9]+"))

@@ -118,8 +118,28 @@ public class TortureScriptTP : TPScript<TortureScript>
         }
         else if(Regex.IsMatch(command, @"(RESIZE|SETSIZE)\s+[0-9]+\s+[0-9]+"))
         {
-            if (Module.IsMission)
-                yield return "sendtochat We are in a mission. Grid size changes are disallowed.";
+            if (Module.IsMissionSettingsSet)
+                yield return "sendtochat The mission has set its own parameters. Grid size changes are disallowed.";
+            else if (Module.IsMission())
+            {
+                var match = Regex.Match(command, @"(RESIZE|SETSIZE)\s+([0-9]+)\s+([0-9]+)");
+
+                int h = int.Parse(match.Groups[2].Value);
+                int w = int.Parse(match.Groups[3].Value);
+
+                if (h * w >= 16)
+                {
+                    Module.Height = int.Parse(match.Groups[2].Value);
+                    Module.Width = int.Parse(match.Groups[3].Value);
+
+                    Module.MinAffected = Mathf.Clamp(Module.Settings.MinAffected, Module.GridSize / 3, Module.GridSize);
+                    Module.MaxAffected = Mathf.Clamp(Module.Settings.MaxAffected, Mathf.Max((int)(Module.GridSize / 1.5f), Module.MinAffected), Module.GridSize);
+
+                    Module.GenerateGrid(Module.Modulus);
+                }
+                else
+                    yield return "sendtochaterror In missions, the grid size cannot be set to lower than the default 16 tiles.";
+            }
             else
             {
                 var match = Regex.Match(command, @"(RESIZE|SETSIZE)\s+([0-9]+)\s+([0-9]+)");

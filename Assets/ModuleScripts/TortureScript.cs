@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
@@ -84,7 +85,7 @@ public class TortureScript : ModuleScript
         "Questions, questions, unsatisfying answers galore. Here's a question for you: Do you really think that you matter?",
         "The list of ramblings might get updated, it might also not, because I might be dead, or I might not, or because of disinterest, or other factors. You see how useless picking from all of these choices is?"
     };
-    internal bool IsModuleSolved, IsSeedSet, IsNotEnoughTime, IsLogging, IsAutosolve, IsRalpMode = false, IsAprilFools, IsFirstTime = true, IsMission = false, FirstTime = true;
+    internal bool IsModuleSolved, IsSeedSet, IsNotEnoughTime, IsLogging, IsAutosolve, IsRalpMode = false, IsAprilFools, IsFirstTime = true, IsMissionSettingsSet = false, FirstTime = true;
     private int _seed;
     internal int Modulus, MinAffected, MaxAffected;
     internal int[] TwitchPlaysAutosolver;
@@ -120,10 +121,10 @@ public class TortureScript : ModuleScript
         // _width = 5;
         // _height = 1;
 
-        if (Width * Height < 9 && !IsAprilFools)
+        if (Width * Height < 1 && !IsAprilFools)
         {
-            Height = 3;
-            Width = 3;
+            Height = 1;
+            Width = 1;
 
             Settings.Height = Height;
             Settings.Width = Width;
@@ -141,6 +142,17 @@ public class TortureScript : ModuleScript
         {
             MinAffected = Mathf.Clamp(Settings.MinAffected, GridSize / 3, GridSize);
             MaxAffected = Mathf.Clamp(Settings.MaxAffected, Mathf.Max((int)(GridSize / 1.5f), MinAffected), GridSize);
+        }
+
+        if (IsMission())
+        {
+            Height = 4;
+            Width = 4;
+
+            Modulus = 10;
+
+            MinAffected = 5;
+            MaxAffected = 7;
         }
 
         Config.Write(Settings);
@@ -165,7 +177,7 @@ public class TortureScript : ModuleScript
         if (!match.Success)
             return;
 
-        IsMission = true;
+        IsMissionSettingsSet = true;
 
         Modulus = Mathf.Clamp(int.Parse(match.Groups[1].Value), 2, int.MaxValue);
         MinAffected = int.Parse(match.Groups[2].Value);
@@ -272,6 +284,7 @@ public class TortureScript : ModuleScript
         }
         string log = LoggingHelper(TwitchPlaysAutosolver);
         Log("The solution grid is: " + log);
+        Log("MissionID: " + Game.Mission.ID);
     }
 
     public static string IntToString(int value, char[] baseChars)
@@ -513,5 +526,10 @@ public class TortureScript : ModuleScript
             int index = (int)v.x + Width * (int)v.y;
             _grid[index].SetTileColour(index, IsAutosolve ? 4 : 2);
         }
+    }
+
+    internal bool IsMission()
+    {
+        return Game.Mission.ID != "custom";
     }
 }

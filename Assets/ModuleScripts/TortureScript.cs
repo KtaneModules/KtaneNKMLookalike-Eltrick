@@ -284,7 +284,6 @@ public class TortureScript : ModuleScript
         }
         string log = LoggingHelper(TwitchPlaysAutosolver);
         Log("The solution grid is: " + log);
-        Log("MissionID: " + Game.Mission.ID);
     }
 
     public static string IntToString(int value, char[] baseChars)

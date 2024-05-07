@@ -3,7 +3,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
@@ -13,7 +12,6 @@ public class TortureScript : ModuleScript
 {
     private KMBombModule _module;
     private KMBombInfo _info;
-    private System.Random _rnd;
 
     [SerializeField]
     private KMSelectable _referencePoint, _loggingKey;
@@ -26,6 +24,7 @@ public class TortureScript : ModuleScript
     [SerializeField]
     private TortureScriptTP _tortureScriptTP;
 
+    internal System.Random Rand;
     internal int Height = 4, Width = 4;
     internal int GridSize { get { return Height * Width; } }
     internal Selectable[] _grid;
@@ -104,7 +103,7 @@ public class TortureScript : ModuleScript
             IsSeedSet = true;
         }
 
-        _rnd = new System.Random(_seed);
+        Rand = new System.Random(_seed);
         // SET SEED ABOVE IN CASE OF BUGS!!
         // _rnd = new System.Random(loggedSeed);
         _module = Get<KMBombModule>();
@@ -115,8 +114,8 @@ public class TortureScript : ModuleScript
         ModConfig<TortureSettings> Config = new ModConfig<TortureSettings>("TortureSettings");
         Settings = Config.Read();
 
-        Width = IsAprilFools ? _rnd.Next(1, 256) : Settings.Width;
-        Height = IsAprilFools ? _rnd.Next(1, 256) : Settings.Height;
+        Width = IsAprilFools ? Rand.Next(1, 256) : Settings.Width;
+        Height = IsAprilFools ? Rand.Next(1, 256) : Settings.Height;
 
         // _width = 5;
         // _height = 1;
@@ -162,7 +161,7 @@ public class TortureScript : ModuleScript
 
         MissionDescription();
 
-        GenerateGrid(_rnd.Next(0, Modulus));
+        GenerateGrid(Rand.Next(0, Modulus));
     }
 
     private void MissionDescription()
@@ -206,7 +205,7 @@ public class TortureScript : ModuleScript
         {
             int x = i;
             _grid[i] = Instantiate(_referencePoint, _module.transform).GetComponent<Selectable>();
-            _grid[i].SetValues(i, IsRalpMode ? _rnd.Next(GridSize / 2, GridSize + 1) : _rnd.Next(MinAffected, MaxAffected + 1), GridSize, initialFinalValue, Modulus);
+            _grid[i].SetValues(i, IsRalpMode ? Rand.Next(GridSize / 2, GridSize + 1) : Rand.Next(MinAffected, MaxAffected + 1), GridSize, initialFinalValue, Modulus);
             _grid[i].SetText(initialFinalValue.ToString());
             _grid[i].SetColour(i, false, IsLogging);
 
@@ -229,7 +228,7 @@ public class TortureScript : ModuleScript
         TwitchPlaysAutosolver = new int[GridSize];
         for (int i = 0; i < GridSize; i++)
         {
-            int random = _rnd.Next(0, Modulus);
+            int random = Rand.Next(0, Modulus);
             TwitchPlaysAutosolver[i] = (Modulus - random) % Modulus;
             _grid[i].ApplyChanges(random);
         }
@@ -353,11 +352,11 @@ public class TortureScript : ModuleScript
             PlaySound(_module.transform, false, _sounds[1]);
             float elapsed = 0;
 
-            string test = _ramblings[_rnd.Next(0, _ramblings.Length)];
+            string test = _ramblings[Rand.Next(0, _ramblings.Length)];
             string[] structure = StringToBinary(test).Split(GridSize).ToArray();
 
             while (structure[structure.Length - 1].Length != GridSize)
-                structure[structure.Length - 1] = structure[structure.Length - 1].PadRight(GridSize, new char[] { '0', '1' }[_rnd.Next(0, 2)]);
+                structure[structure.Length - 1] = structure[structure.Length - 1].PadRight(GridSize, new char[] { '0', '1' }[Rand.Next(0, 2)]);
 
             int part = -1;
             while (elapsed < 24.3f)
@@ -413,7 +412,7 @@ public class TortureScript : ModuleScript
 
     private void DrawCharacter(char character)
     {
-        Vector2 bias = new Vector2((float)_rnd.NextDouble() / 10 - .05f, (float)_rnd.NextDouble() / 10 - .05f);
+        Vector2 bias = new Vector2((float)Rand.NextDouble() / 10 - .05f, (float)Rand.NextDouble() / 10 - .05f);
         switch (character)
         {
             case 'W':

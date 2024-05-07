@@ -45,7 +45,7 @@ public class Selectable : MonoBehaviour
 
     private void SetOffsets()
     {
-        Enumerable.Range(0, _offsets.Length).ToList().Shuffle().Take(_offsetSize).ForEach(x => _offsets[x] = Random.Range(1, _modulus));
+        Enumerable.Range(0, _offsets.Length).ToList().Shuffle().Take(_offsetSize).ForEach(x => _offsets[x] = Parent.Rand.Next(1, _modulus));
     }
 
     public void ApplyChanges(int t = 1)

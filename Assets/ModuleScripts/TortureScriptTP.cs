@@ -120,7 +120,7 @@ public class TortureScriptTP : TPScript<TortureScript>
         {
             if (Module.IsMissionSettingsSet)
                 yield return "sendtochat The mission has set its own parameters. Grid size changes are disallowed.";
-            else if (Module.IsMission())
+            else if (Module.IsMission() && !Application.isEditor)
             {
                 var match = Regex.Match(command, @"(RESIZE|SETSIZE)\s+([0-9]+)\s+([0-9]+)");
 
@@ -156,6 +156,7 @@ public class TortureScriptTP : TPScript<TortureScript>
                     Module.MaxAffected = Mathf.Clamp(Module.Settings.MaxAffected, Mathf.Max((int)(Module.GridSize / 1.5f), Module.MinAffected), Module.GridSize);
 
                     Module.GenerateGrid(Module.Modulus);
+                    yield return AwardPointsOnSolve(GetOffsetScore(_offset, Module.GridSize));
                 }
                 else
                     yield return "sendtochaterror The grid size must be at least 9 tiles.";
@@ -163,10 +164,6 @@ public class TortureScriptTP : TPScript<TortureScript>
         }
         else
             yield return "sendtochaterror The module did not detect any valid command formats. Check your command.";
-
-        yield return new WaitForSeconds(.125f);
-        if (Module.IsModuleSolved)
-            yield return AwardPointsOnSolve(GetOffsetScore(_offset, Module.GridSize));
     }
 
     private static int GetOffsetScore(int offset, int gridSize)
